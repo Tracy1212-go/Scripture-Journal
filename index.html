@@ -17,6 +17,8 @@
     --accent-hover: #134d8c;
     --tag-bg: #d4edda;
     --tag-text: #1a6e35;
+    --danger: #c0392b;
+    --danger-light: #fdecea;
     --shadow: 0 2px 12px rgba(26,95,168,0.08);
     --shadow-lg: 0 8px 32px rgba(26,95,168,0.14);
     --radius: 12px;
@@ -34,6 +36,8 @@
     --accent-hover: #27ae60;
     --tag-bg: #0e2e1e;
     --tag-text: #2ecc71;
+    --danger: #e74c3c;
+    --danger-light: #2a0f0f;
     --shadow: 0 2px 12px rgba(0,0,0,0.35);
     --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
   }
@@ -95,9 +99,6 @@
     border-radius: 50px;
     padding: 8px 18px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
     font-size: 0.85rem;
     color: var(--accent);
     font-family: inherit;
@@ -158,9 +159,58 @@
   .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
   .btn-secondary { background: var(--surface2); color: var(--text2); border: 1.5px solid var(--border); }
   .btn-secondary:hover { background: var(--border); }
-  .search-bar { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  /* â”€â”€ Journal toolbar â”€â”€ */
+  .journal-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .search-bar { display: flex; gap: 12px; align-items: center; flex: 1; min-width: 200px; }
   .search-bar input { flex: 1; }
   .entry-count { font-size: 0.82rem; color: var(--text2); font-family: -apple-system, sans-serif; white-space: nowrap; }
+  .select-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .sel-btn {
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-family: -apple-system, sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .sel-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .sel-btn.danger { border-color: var(--danger); color: var(--danger); background: var(--danger-light); }
+  .sel-btn.danger:hover { background: var(--danger); color: #fff; }
+  .sel-btn:disabled { opacity: 0.4; pointer-events: none; }
+
+  /* â”€â”€ Selection mode indicator â”€â”€ */
+  .select-mode-bar {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: var(--accent-light);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    margin-bottom: 14px;
+    font-family: -apple-system, sans-serif;
+    font-size: 0.88rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .select-mode-bar.active { display: flex; }
+
+  /* â”€â”€ Entry cards â”€â”€ */
   .entries { display: flex; flex-direction: column; gap: 16px; }
   .entry-card {
     background: var(--surface);
@@ -168,11 +218,30 @@
     border-radius: var(--radius);
     padding: 22px 24px;
     box-shadow: var(--shadow);
-    transition: box-shadow 0.2s, background var(--transition), border-color var(--transition);
+    transition: box-shadow 0.2s, background var(--transition), border-color var(--transition), outline 0.15s;
     position: relative;
+    cursor: default;
   }
   .entry-card:hover { box-shadow: var(--shadow-lg); }
-  .entry-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; }
+  .select-mode .entry-card { cursor: pointer; }
+  .select-mode .entry-card:hover { outline: 2px solid var(--accent); }
+  .entry-card.selected {
+    outline: 2.5px solid var(--accent);
+    background: var(--accent-light);
+  }
+  .entry-checkbox {
+    display: none;
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    width: 20px;
+    height: 20px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .select-mode .entry-checkbox { display: block; }
+  .select-mode .entry-header { padding-left: 30px; }
+  .entry-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; transition: padding 0.2s; }
   .entry-ref { font-size: 1.05rem; font-weight: bold; color: var(--accent); }
   .entry-date { font-size: 0.8rem; color: var(--text2); font-family: -apple-system, sans-serif; white-space: nowrap; }
   .entry-text {
@@ -216,6 +285,7 @@
   }
   .entry-actions { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s; }
   .entry-card:hover .entry-actions { opacity: 1; }
+  .select-mode .entry-actions { display: none; }
   .icon-btn {
     background: var(--surface2);
     border: 1px solid var(--border);
@@ -228,9 +298,36 @@
     transition: all 0.15s;
   }
   .icon-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .icon-btn.del:hover { background: #c0392b; border-color: #c0392b; }
+  .icon-btn.del:hover { background: var(--danger); border-color: var(--danger); }
   .empty { text-align: center; padding: 48px 20px; color: var(--text2); font-family: -apple-system, sans-serif; }
   .empty svg { width: 48px; height: 48px; margin-bottom: 14px; opacity: 0.35; }
+
+  /* â”€â”€ Confirm modal â”€â”€ */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 28px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+  }
+  .modal h3 { font-size: 1.2rem; color: var(--danger); margin-bottom: 12px; }
+  .modal p { font-size: 0.95rem; color: var(--text2); margin-bottom: 24px; font-family: -apple-system, sans-serif; line-height: 1.5; }
+  .modal p strong { color: var(--text); }
+  .modal-btns { display: flex; gap: 12px; justify-content: center; }
+
   .toast {
     position: fixed; bottom: 28px; left: 50%;
     transform: translateX(-50%) translateY(80px);
@@ -244,6 +341,7 @@
     .form-grid { grid-template-columns: 1fr; }
     .form-group.full, .form-group.narrow { grid-column: 1; max-width: 100%; }
     main { padding: 20px 14px 50px; }
+    .journal-toolbar { flex-direction: column; align-items: stretch; }
   }
 </style>
 </head>
@@ -259,10 +357,7 @@
     </svg>
     Scripture Journal
   </div>
-  <button class="theme-btn" id="themeBtn">
-    <span id="themeIcon">ðŸŒ™</span>
-    <span id="themeLabel">Dark Mode</span>
-  </button>
+  <button class="theme-btn" id="themeBtn">[ Dark Mode ]</button>
 </header>
 
 <main>
@@ -271,7 +366,7 @@
     <div class="form-grid">
       <div class="form-group full">
         <label>Scripture Text</label>
-        <textarea id="f-text" placeholder="Enter the scripture passage here." rows="5"></textarea>
+        <textarea id="f-text" placeholder="Enter the scripture passage here..." rows="5"></textarea>
       </div>
       <div class="form-group full">
         <label>Source / Reference</label>
@@ -279,7 +374,7 @@
       </div>
       <div class="form-group full">
         <label>Comments / Observations</label>
-        <textarea id="f-comments" placeholder="Your personal reflections, insights, or notes." rows="4"></textarea>
+        <textarea id="f-comments" placeholder="Your personal reflections, insights, or notes..." rows="4"></textarea>
       </div>
       <div class="form-group narrow">
         <label>Date</label>
@@ -298,13 +393,36 @@
 
   <div class="card">
     <h2>My Journal</h2>
-    <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="Search by keyword, tag, reference, or comments.">
-      <span class="entry-count" id="entryCount"></span>
+    <div class="journal-toolbar">
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search by keyword, tag, reference, or comments...">
+        <span class="entry-count" id="entryCount"></span>
+      </div>
+      <div class="select-controls">
+        <button class="sel-btn" id="toggleSelectBtn">Select Entries</button>
+        <button class="sel-btn" id="selectAllBtn" style="display:none;">Select All</button>
+        <button class="sel-btn danger" id="deleteSelectedBtn" style="display:none;" disabled>Delete Selected (0)</button>
+        <button class="sel-btn" id="cancelSelectBtn" style="display:none;">Cancel</button>
+      </div>
+    </div>
+    <div class="select-mode-bar" id="selectModeBar">
+      Selection mode is ON â€” tap entries to select them, then press Delete Selected.
     </div>
     <div class="entries" id="entriesList"></div>
   </div>
 </main>
+
+<!-- Confirm Delete Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>Delete Entries?</h3>
+    <p id="modalMsg">Are you sure you want to delete these entries? <strong>This cannot be undone.</strong></p>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" id="modalCancelBtn">No, Keep Them</button>
+      <button class="btn btn-danger" id="modalConfirmBtn">Yes, Delete</button>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -315,7 +433,6 @@
   var STORE_KEY = 'sj_entries';
   var THEME_KEY = 'sj_theme';
 
-  // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function esc(s) {
     return String(s)
       .replace(/&/g, '&amp;')
@@ -326,43 +443,35 @@
 
   function fmtDate(d) {
     if (!d) return '';
-    var parts = d.split('-');
-    var dt = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-    return dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    var p = d.split('-');
+    return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]))
+      .toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   }
 
   function today() {
     var d = new Date();
-    var mm = String(d.getMonth() + 1).padStart(2, '0');
-    var dd = String(d.getDate()).padStart(2, '0');
-    return d.getFullYear() + '-' + mm + '-' + dd;
+    return d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
   }
 
-  // â”€â”€ Storage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function loadEntries() {
-    try {
-      var raw = localStorage.getItem(STORE_KEY);
-      if (!raw) return [];
-      var parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-      return [];
-    }
+    try { var r = localStorage.getItem(STORE_KEY); return r ? JSON.parse(r) : []; }
+    catch (e) { return []; }
   }
 
   function saveEntries(arr) {
-    try {
-      localStorage.setItem(STORE_KEY, JSON.stringify(arr));
-    } catch (e) {
-      showToast('Storage error â€” entry may not persist.');
-    }
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(arr)); }
+    catch (e) { showToast('Storage error.'); }
   }
 
   // â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  var entries = loadEntries();
-  var editingId = null;
+  var entries    = loadEntries();
+  var editingId  = null;
+  var selectMode = false;
+  var selected   = {};   // id -> true
 
-  // â”€â”€ DOM refs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€ DOM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   var fText     = document.getElementById('f-text');
   var fRef      = document.getElementById('f-ref');
   var fComments = document.getElementById('f-comments');
@@ -374,8 +483,17 @@
   var listEl    = document.getElementById('entriesList');
   var countEl   = document.getElementById('entryCount');
   var themeBtn  = document.getElementById('themeBtn');
-  var themeIcon = document.getElementById('themeIcon');
-  var themeLbl  = document.getElementById('themeLabel');
+
+  var toggleSelectBtn   = document.getElementById('toggleSelectBtn');
+  var selectAllBtn      = document.getElementById('selectAllBtn');
+  var deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+  var cancelSelectBtn   = document.getElementById('cancelSelectBtn');
+  var selectModeBar     = document.getElementById('selectModeBar');
+
+  var modalOverlay  = document.getElementById('modalOverlay');
+  var modalMsg      = document.getElementById('modalMsg');
+  var modalConfirm  = document.getElementById('modalConfirmBtn');
+  var modalCancel   = document.getElementById('modalCancelBtn');
 
   // â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   fDate.value = today();
@@ -391,8 +509,7 @@
   function applyTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
     localStorage.setItem(THEME_KEY, t);
-    themeIcon.textContent = t === 'dark' ? '[ Light ]' : '[ Dark ]';
-    themeLbl.textContent  = '';
+    themeBtn.textContent = t === 'dark' ? '[ Light Mode ]' : '[ Dark Mode ]';
   }
 
   // â”€â”€ Save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -410,36 +527,23 @@
     if (editingId) {
       for (var i = 0; i < entries.length; i++) {
         if (entries[i].id === editingId) {
-          entries[i].text     = text;
-          entries[i].ref      = ref;
-          entries[i].comments = comments;
-          entries[i].date     = date;
-          entries[i].tags     = tags;
+          entries[i].text = text; entries[i].ref = ref;
+          entries[i].comments = comments; entries[i].date = date; entries[i].tags = tags;
           break;
         }
       }
       editingId = null;
       saveBtn.textContent = 'Save Entry';
-      showToast('Entry updated âœ“');
+      showToast('Entry updated.');
     } else {
-      var entry = {
-        id:       String(Date.now()),
-        text:     text,
-        ref:      ref,
-        comments: comments,
-        date:     date,
-        tags:     tags
-      };
-      entries.unshift(entry);
-      showToast('Entry saved âœ“');
+      entries.unshift({ id: String(Date.now()), text: text, ref: ref, comments: comments, date: date, tags: tags });
+      showToast('Entry saved.');
     }
-
     saveEntries(entries);
     clearForm();
     renderEntries();
   });
 
-  // â”€â”€ Clear â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   clearBtn.addEventListener('click', function () {
     editingId = null;
     saveBtn.textContent = 'Save Entry';
@@ -447,53 +551,178 @@
   });
 
   function clearForm() {
-    fText.value     = '';
-    fRef.value      = '';
-    fComments.value = '';
-    fDate.value     = today();
-    fTags.value     = '';
+    fText.value = ''; fRef.value = ''; fComments.value = '';
+    fDate.value = today(); fTags.value = '';
   }
 
-  // â”€â”€ Edit / Delete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // â”€â”€ Select mode controls â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  toggleSelectBtn.addEventListener('click', function () {
+    enterSelectMode();
+  });
+
+  cancelSelectBtn.addEventListener('click', function () {
+    exitSelectMode();
+  });
+
+  selectAllBtn.addEventListener('click', function () {
+    var q = searchEl.value.toLowerCase();
+    var filtered = getFiltered(q);
+    var allSelected = filtered.every(function (e) { return selected[e.id]; });
+    selected = {};
+    if (!allSelected) {
+      filtered.forEach(function (e) { selected[e.id] = true; });
+    }
+    renderEntries();
+    updateDeleteBtn();
+  });
+
+  deleteSelectedBtn.addEventListener('click', function () {
+    var count = Object.keys(selected).length;
+    if (count === 0) return;
+    modalMsg.innerHTML = 'You are about to permanently delete <strong>' + count +
+      ' entr' + (count === 1 ? 'y' : 'ies') + '</strong>. This cannot be undone.';
+    modalOverlay.classList.add('open');
+  });
+
+  modalCancel.addEventListener('click', function () {
+    modalOverlay.classList.remove('open');
+  });
+
+  modalConfirm.addEventListener('click', function () {
+    var count = Object.keys(selected).length;
+    entries = entries.filter(function (e) { return !selected[e.id]; });
+    saveEntries(entries);
+    selected = {};
+    modalOverlay.classList.remove('open');
+    exitSelectMode();
+    showToast(count + ' entr' + (count === 1 ? 'y' : 'ies') + ' deleted.');
+    renderEntries();
+  });
+
+  // Click outside modal to cancel
+  modalOverlay.addEventListener('click', function (e) {
+    if (e.target === modalOverlay) modalOverlay.classList.remove('open');
+  });
+
+  function enterSelectMode() {
+    selectMode = true;
+    selected = {};
+    toggleSelectBtn.style.display = 'none';
+    selectAllBtn.style.display = '';
+    deleteSelectedBtn.style.display = '';
+    cancelSelectBtn.style.display = '';
+    selectModeBar.classList.add('active');
+    listEl.classList.add('select-mode');
+    updateDeleteBtn();
+    renderEntries();
+  }
+
+  function exitSelectMode() {
+    selectMode = false;
+    selected = {};
+    toggleSelectBtn.style.display = '';
+    selectAllBtn.style.display = 'none';
+    deleteSelectedBtn.style.display = 'none';
+    cancelSelectBtn.style.display = 'none';
+    selectModeBar.classList.remove('active');
+    listEl.classList.remove('select-mode');
+    renderEntries();
+  }
+
+  function updateDeleteBtn() {
+    var count = Object.keys(selected).length;
+    deleteSelectedBtn.textContent = 'Delete Selected (' + count + ')';
+    deleteSelectedBtn.disabled = count === 0;
+  }
+
+  // â”€â”€ Entry card clicks (edit, delete single, select) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   listEl.addEventListener('click', function (e) {
+    if (selectMode) {
+      var card = e.target.closest('.entry-card');
+      if (!card) return;
+      var id = card.getAttribute('data-id');
+      var cb = card.querySelector('.entry-checkbox');
+      if (selected[id]) {
+        delete selected[id];
+        card.classList.remove('selected');
+        if (cb) cb.checked = false;
+      } else {
+        selected[id] = true;
+        card.classList.add('selected');
+        if (cb) cb.checked = true;
+      }
+      updateDeleteBtn();
+      return;
+    }
+
     var editBtn = e.target.closest('.edit-btn');
     var delBtn  = e.target.closest('.del-btn');
 
     if (editBtn) {
-      var id = editBtn.getAttribute('data-id');
+      var eid = editBtn.getAttribute('data-id');
       var entry = null;
       for (var i = 0; i < entries.length; i++) {
-        if (entries[i].id === id) { entry = entries[i]; break; }
+        if (entries[i].id === eid) { entry = entries[i]; break; }
       }
       if (!entry) return;
-      fText.value     = entry.text;
-      fRef.value      = entry.ref;
-      fComments.value = entry.comments || '';
-      fDate.value     = entry.date;
-      fTags.value     = entry.tags.join(', ');
-      editingId = id;
+      fText.value = entry.text; fRef.value = entry.ref;
+      fComments.value = entry.comments || ''; fDate.value = entry.date;
+      fTags.value = entry.tags.join(', ');
+      editingId = eid;
       saveBtn.textContent = 'Update Entry';
       document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
     }
 
     if (delBtn) {
-      if (!confirm('Delete this entry?')) return;
       var did = delBtn.getAttribute('data-id');
-      entries = entries.filter(function (e) { return e.id !== did; });
-      saveEntries(entries);
-      renderEntries();
-      showToast('Entry deleted');
+      var dentry = null;
+      for (var j = 0; j < entries.length; j++) {
+        if (entries[j].id === did) { dentry = entries[j]; break; }
+      }
+      modalMsg.innerHTML = 'You are about to delete <strong>"' + esc(dentry ? dentry.ref : 'this entry') +
+        '"</strong>. This cannot be undone.';
+      modalOverlay.classList.add('open');
+      modalConfirm.setAttribute('data-single', did);
     }
   });
+
+  // Handle single-entry delete confirmation separately
+  modalConfirm.addEventListener('click', function () {
+    // Already handled above for bulk; for single we check data-single
+  }, false);
+
+  // Override modal confirm to handle both single and bulk
+  modalConfirm.onclick = function () {
+    var singleId = modalConfirm.getAttribute('data-single');
+    if (singleId) {
+      entries = entries.filter(function (e) { return e.id !== singleId; });
+      saveEntries(entries);
+      modalConfirm.removeAttribute('data-single');
+      modalOverlay.classList.remove('open');
+      showToast('Entry deleted.');
+      renderEntries();
+    } else {
+      var count = Object.keys(selected).length;
+      entries = entries.filter(function (e) { return !selected[e.id]; });
+      saveEntries(entries);
+      selected = {};
+      modalOverlay.classList.remove('open');
+      exitSelectMode();
+      showToast(count + ' entr' + (count === 1 ? 'y' : 'ies') + ' deleted.');
+      renderEntries();
+    }
+  };
+
+  modalCancel.onclick = function () {
+    modalConfirm.removeAttribute('data-single');
+    modalOverlay.classList.remove('open');
+  };
 
   // â”€â”€ Search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   searchEl.addEventListener('input', renderEntries);
 
-  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  function renderEntries() {
-    var q = searchEl.value.toLowerCase();
-
-    var filtered = entries.filter(function (e) {
+  function getFiltered(q) {
+    return entries.filter(function (e) {
       if (!q) return true;
       return (
         e.text.toLowerCase().indexOf(q) !== -1 ||
@@ -502,6 +731,12 @@
         e.tags.some(function (t) { return t.toLowerCase().indexOf(q) !== -1; })
       );
     });
+  }
+
+  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  function renderEntries() {
+    var q = searchEl.value.toLowerCase();
+    var filtered = getFiltered(q);
 
     countEl.textContent = filtered.length === entries.length
       ? entries.length + ' entr' + (entries.length === 1 ? 'y' : 'ies')
@@ -520,15 +755,17 @@
     var html = '';
     for (var i = 0; i < filtered.length; i++) {
       var e = filtered[i];
+      var isSelected = !!selected[e.id];
       var tagsHtml = '';
       for (var j = 0; j < e.tags.length; j++) {
         tagsHtml += '<span class="tag">' + esc(e.tags[j]) + '</span>';
       }
       html +=
-        '<div class="entry-card">' +
+        '<div class="entry-card' + (isSelected ? ' selected' : '') + '" data-id="' + esc(e.id) + '">' +
+          '<input type="checkbox" class="entry-checkbox"' + (isSelected ? ' checked' : '') + ' tabindex="-1">' +
           '<div class="entry-actions">' +
-            '<button class="icon-btn edit-btn" data-id="' + esc(e.id) + '" title="Edit">âœŽ</button>' +
-            '<button class="icon-btn del-btn del" data-id="' + esc(e.id) + '" title="Delete">âœ•</button>' +
+            '<button class="icon-btn edit-btn" data-id="' + esc(e.id) + '" title="Edit">&#9998;</button>' +
+            '<button class="icon-btn del del-btn" data-id="' + esc(e.id) + '" title="Delete">&#x2715;</button>' +
           '</div>' +
           '<div class="entry-header">' +
             '<span class="entry-ref">' + esc(e.ref) + '</span>' +
@@ -540,6 +777,7 @@
         '</div>';
     }
     listEl.innerHTML = html;
+    if (selectMode) listEl.classList.add('select-mode');
   }
 
   // â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -549,7 +787,7 @@
     toastEl.textContent = msg;
     toastEl.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2400);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2500);
   }
 
 }());
