@@ -267,7 +267,7 @@
 
 <main>
   <div class="card">
-    <h2>âœ¦ New Entry</h2>
+    <h2>New Entry</h2>
     <div class="form-grid">
       <div class="form-group full">
         <label>Scripture Text</label>
@@ -297,7 +297,7 @@
   </div>
 
   <div class="card">
-    <h2>ðŸ“– My Journal</h2>
+    <h2>My Journal</h2>
     <div class="search-bar">
       <input type="text" id="searchInput" placeholder="Search by keyword, tag, reference, or commentsâ€¦">
       <span class="entry-count" id="entryCount"></span>
@@ -391,8 +391,8 @@
   function applyTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
     localStorage.setItem(THEME_KEY, t);
-    themeIcon.textContent = t === 'dark' ? 'â˜€ï¸' : 'ðŸŒ™';
-    themeLbl.textContent  = t === 'dark' ? 'Light Mode' : 'Dark Mode';
+    themeIcon.textContent = t === 'dark' ? '[ Light ]' : '[ Dark ]';
+    themeLbl.textContent  = '';
   }
 
   // â”€â”€ Save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -535,7 +535,7 @@
             '<span class="entry-date">' + fmtDate(e.date) + '</span>' +
           '</div>' +
           '<div class="entry-text">' + esc(e.text) + '</div>' +
-          (e.comments ? '<div class="entry-comments"><span class="comments-label">âœ¦ My Notes</span>' + esc(e.comments) + '</div>' : '') +
+          (e.comments ? '<div class="entry-comments"><span class="comments-label">My Notes</span>' + esc(e.comments) + '</div>' : '') +
           (e.tags.length ? '<div class="tags">' + tagsHtml + '</div>' : '') +
         '</div>';
     }
