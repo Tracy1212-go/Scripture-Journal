@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scripture Journal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.8.2/docx.umd.min.js"></script>
 <style>
   :root {
     --bg: #f0f6ff;
@@ -19,6 +20,9 @@
     --tag-text: #1a6e35;
     --danger: #c0392b;
     --danger-light: #fdecea;
+    --warning-bg: #fffbea;
+    --warning-border: #f0d060;
+    --warning-text: #7a5c00;
     --shadow: 0 2px 12px rgba(26,95,168,0.08);
     --shadow-lg: 0 8px 32px rgba(26,95,168,0.14);
     --radius: 12px;
@@ -38,6 +42,9 @@
     --tag-text: #2ecc71;
     --danger: #e74c3c;
     --danger-light: #2a0f0f;
+    --warning-bg: #2a2000;
+    --warning-border: #7a6000;
+    --warning-text: #f0d060;
     --shadow: 0 2px 12px rgba(0,0,0,0.35);
     --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
   }
@@ -52,10 +59,8 @@
   }
   body::before {
     content: '';
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 0;
     background-image:
       repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(128,112,90,0.07) 3px, rgba(128,112,90,0.07) 4px),
       repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(128,112,90,0.07) 3px, rgba(128,112,90,0.07) 4px),
@@ -73,88 +78,74 @@
   header {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
-    padding: 0 24px;
-    height: 68px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    padding: 0 24px; height: 68px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
     box-shadow: var(--shadow);
     transition: background var(--transition), border-color var(--transition);
   }
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 1.25rem;
-    font-weight: bold;
-    color: var(--accent);
-  }
+  .logo { display: flex; align-items: center; gap: 10px; font-size: 1.25rem; font-weight: bold; color: var(--accent); }
   .logo svg { width: 28px; height: 28px; }
   .theme-btn {
-    background: var(--accent-light);
-    border: 1.5px solid var(--border);
-    border-radius: 50px;
-    padding: 8px 18px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    color: var(--accent);
-    font-family: inherit;
-    font-weight: 600;
+    background: var(--accent-light); border: 1.5px solid var(--border);
+    border-radius: 50px; padding: 8px 18px; cursor: pointer;
+    font-size: 0.85rem; color: var(--accent); font-family: inherit; font-weight: 600;
     transition: all var(--transition);
   }
   .theme-btn:hover { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+
+  /* ââ Warning banner ââ */
+  .warning-banner {
+    background: var(--warning-bg);
+    border: 1.5px solid var(--warning-border);
+    border-radius: var(--radius);
+    padding: 13px 18px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-family: -apple-system, sans-serif;
+    font-size: 0.87rem;
+    color: var(--warning-text);
+    line-height: 1.55;
+    transition: background var(--transition), border-color var(--transition), color var(--transition);
+  }
+  .warning-banner .w-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+  .warning-banner .w-text { flex: 1; }
+  .warning-banner .w-text strong { display: block; margin-bottom: 3px; font-size: 0.9rem; }
+  .dismiss-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--warning-text); font-size: 1rem; opacity: 0.6;
+    flex-shrink: 0; padding: 0 2px; line-height: 1;
+    transition: opacity 0.2s;
+  }
+  .dismiss-btn:hover { opacity: 1; }
+
   main { max-width: 820px; margin: 0 auto; padding: 36px 20px 60px; position: relative; z-index: 1; }
   h2 { font-size: 1.4rem; color: var(--accent); margin-bottom: 20px; font-weight: bold; }
   .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px;
-    box-shadow: var(--shadow);
-    margin-bottom: 32px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 28px;
+    box-shadow: var(--shadow); margin-bottom: 32px;
     transition: background var(--transition), border-color var(--transition);
   }
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
   .form-group { display: flex; flex-direction: column; gap: 6px; }
   .form-group.full { grid-column: 1 / -1; }
   .form-group.narrow { max-width: 180px; }
-  label {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--text2);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-family: -apple-system, sans-serif;
-  }
+  label { font-size: 0.78rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; font-family: -apple-system, sans-serif; }
   input, textarea {
-    background: var(--surface2);
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    padding: 11px 14px;
-    font-size: 0.95rem;
-    color: var(--text);
-    font-family: Georgia, serif;
+    background: var(--surface2); border: 1.5px solid var(--border);
+    border-radius: 8px; padding: 11px 14px; font-size: 0.95rem;
+    color: var(--text); font-family: Georgia, serif;
     transition: border-color var(--transition), background var(--transition);
-    outline: none;
-    width: 100%;
+    outline: none; width: 100%;
   }
   input:focus, textarea:focus { border-color: var(--accent); background: var(--surface); }
   textarea { resize: vertical; min-height: 110px; line-height: 1.6; }
   input[type="date"]::-webkit-calendar-picker-indicator { filter: opacity(0.5); cursor: pointer; }
   .btn-row { display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px; }
-  .btn {
-    padding: 11px 28px;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-family: inherit;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
-  }
+  .btn { padding: 11px 28px; border-radius: 8px; font-size: 0.95rem; font-family: inherit; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
   .btn-primary { background: var(--accent); color: #fff; }
   .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
   .btn-secondary { background: var(--surface2); color: var(--text2); border: 1.5px solid var(--border); }
@@ -162,181 +153,103 @@
   .btn-danger { background: var(--danger); color: #fff; }
   .btn-danger:hover { opacity: 0.88; transform: translateY(-1px); }
 
-  /* â”€â”€ Journal toolbar â”€â”€ */
-  .journal-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-  }
-  .search-bar { display: flex; gap: 12px; align-items: center; flex: 1; min-width: 200px; }
+  /* ââ Journal toolbar ââ */
+  .journal-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .search-bar { display: flex; gap: 10px; align-items: center; flex: 1; min-width: 180px; }
   .search-bar input { flex: 1; }
   .entry-count { font-size: 0.82rem; color: var(--text2); font-family: -apple-system, sans-serif; white-space: nowrap; }
-  .select-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .toolbar-right { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   .sel-btn {
-    padding: 7px 14px;
-    border-radius: 8px;
-    font-size: 0.82rem;
-    font-family: -apple-system, sans-serif;
-    font-weight: 600;
-    cursor: pointer;
-    border: 1.5px solid var(--border);
-    background: var(--surface2);
-    color: var(--text2);
-    transition: all 0.2s;
-    white-space: nowrap;
+    padding: 7px 13px; border-radius: 8px; font-size: 0.82rem;
+    font-family: -apple-system, sans-serif; font-weight: 600;
+    cursor: pointer; border: 1.5px solid var(--border);
+    background: var(--surface2); color: var(--text2);
+    transition: all 0.2s; white-space: nowrap;
   }
   .sel-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
   .sel-btn.danger { border-color: var(--danger); color: var(--danger); background: var(--danger-light); }
   .sel-btn.danger:hover { background: var(--danger); color: #fff; }
   .sel-btn:disabled { opacity: 0.4; pointer-events: none; }
+  .export-btn {
+    padding: 7px 13px; border-radius: 8px; font-size: 0.82rem;
+    font-family: -apple-system, sans-serif; font-weight: 600;
+    cursor: pointer; border: 1.5px solid var(--border);
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .export-pdf { background: #fff3f0; color: #c0392b; border-color: #f5b7b1; }
+  .export-pdf:hover { background: #c0392b; color: #fff; border-color: #c0392b; }
+  .export-word { background: #eaf4ff; color: #1a5fa8; border-color: #a9cce3; }
+  .export-word:hover { background: #1a5fa8; color: #fff; border-color: #1a5fa8; }
+  [data-theme="dark"] .export-pdf { background: #2a0f0f; color: #e74c3c; border-color: #5a1a1a; }
+  [data-theme="dark"] .export-word { background: #0e2e1e; color: #2ecc71; border-color: #1a5e35; }
 
-  /* â”€â”€ Selection mode indicator â”€â”€ */
   .select-mode-bar {
-    display: none;
-    align-items: center;
-    gap: 10px;
-    background: var(--accent-light);
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 16px;
-    margin-bottom: 14px;
-    font-family: -apple-system, sans-serif;
-    font-size: 0.88rem;
-    color: var(--accent);
-    font-weight: 600;
+    display: none; align-items: center; gap: 10px;
+    background: var(--accent-light); border: 1.5px solid var(--border);
+    border-radius: 8px; padding: 10px 16px; margin-bottom: 14px;
+    font-family: -apple-system, sans-serif; font-size: 0.88rem;
+    color: var(--accent); font-weight: 600;
   }
   .select-mode-bar.active { display: flex; }
 
-  /* â”€â”€ Entry cards â”€â”€ */
   .entries { display: flex; flex-direction: column; gap: 16px; }
   .entry-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 22px 24px;
-    box-shadow: var(--shadow);
-    transition: box-shadow 0.2s, background var(--transition), border-color var(--transition), outline 0.15s;
-    position: relative;
-    cursor: default;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px 24px;
+    box-shadow: var(--shadow); position: relative; cursor: default;
+    transition: box-shadow 0.2s, background var(--transition), border-color var(--transition);
   }
   .entry-card:hover { box-shadow: var(--shadow-lg); }
   .select-mode .entry-card { cursor: pointer; }
   .select-mode .entry-card:hover { outline: 2px solid var(--accent); }
-  .entry-card.selected {
-    outline: 2.5px solid var(--accent);
-    background: var(--accent-light);
-  }
-  .entry-checkbox {
-    display: none;
-    position: absolute;
-    top: 14px;
-    left: 14px;
-    width: 20px;
-    height: 20px;
-    accent-color: var(--accent);
-    cursor: pointer;
-  }
+  .entry-card.selected { outline: 2.5px solid var(--accent); background: var(--accent-light); }
+  .entry-checkbox { display: none; position: absolute; top: 14px; left: 14px; width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; }
   .select-mode .entry-checkbox { display: block; }
   .select-mode .entry-header { padding-left: 30px; }
   .entry-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; transition: padding 0.2s; }
   .entry-ref { font-size: 1.05rem; font-weight: bold; color: var(--accent); }
   .entry-date { font-size: 0.8rem; color: var(--text2); font-family: -apple-system, sans-serif; white-space: nowrap; }
-  .entry-text {
-    font-size: 0.97rem;
-    line-height: 1.75;
-    color: var(--text);
-    margin-bottom: 14px;
-    border-left: 3px solid var(--border);
-    padding-left: 14px;
-    font-style: italic;
-  }
-  .entry-comments {
-    font-size: 0.93rem;
-    line-height: 1.7;
-    color: var(--text);
-    background: var(--accent-light);
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin-bottom: 14px;
-    white-space: pre-wrap;
-  }
-  .comments-label {
-    display: block;
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    margin-bottom: 6px;
-    font-family: -apple-system, sans-serif;
-  }
+  .entry-text { font-size: 0.97rem; line-height: 1.75; color: var(--text); margin-bottom: 14px; border-left: 3px solid var(--border); padding-left: 14px; font-style: italic; }
+  .entry-comments { font-size: 0.93rem; line-height: 1.7; color: var(--text); background: var(--accent-light); border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; white-space: pre-wrap; }
+  .comments-label { display: block; font-size: 0.72rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; font-family: -apple-system, sans-serif; }
   .tags { display: flex; flex-wrap: wrap; gap: 7px; }
-  .tag {
-    background: var(--tag-bg);
-    color: var(--tag-text);
-    border-radius: 50px;
-    padding: 3px 12px;
-    font-size: 0.76rem;
-    font-family: -apple-system, sans-serif;
-    font-weight: 600;
-  }
+  .tag { background: var(--tag-bg); color: var(--tag-text); border-radius: 50px; padding: 3px 12px; font-size: 0.76rem; font-family: -apple-system, sans-serif; font-weight: 600; }
   .entry-actions { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s; }
   .entry-card:hover .entry-actions { opacity: 1; }
   .select-mode .entry-actions { display: none; }
-  .icon-btn {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    width: 30px; height: 30px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    color: var(--text2);
-    font-size: 0.85rem;
-    transition: all 0.15s;
-  }
+  .icon-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text2); font-size: 0.85rem; transition: all 0.15s; }
   .icon-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
   .icon-btn.del:hover { background: var(--danger); border-color: var(--danger); }
   .empty { text-align: center; padding: 48px 20px; color: var(--text2); font-family: -apple-system, sans-serif; }
   .empty svg { width: 48px; height: 48px; margin-bottom: 14px; opacity: 0.35; }
 
-  /* â”€â”€ Confirm modal â”€â”€ */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-  }
+  /* ââ Modal ââ */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
   .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 32px 28px;
-    max-width: 400px;
-    width: 90%;
-    box-shadow: var(--shadow-lg);
-    text-align: center;
-  }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px 28px; max-width: 400px; width: 90%; box-shadow: var(--shadow-lg); text-align: center; }
   .modal h3 { font-size: 1.2rem; color: var(--danger); margin-bottom: 12px; }
   .modal p { font-size: 0.95rem; color: var(--text2); margin-bottom: 24px; font-family: -apple-system, sans-serif; line-height: 1.5; }
   .modal p strong { color: var(--text); }
   .modal-btns { display: flex; gap: 12px; justify-content: center; }
 
-  .toast {
-    position: fixed; bottom: 28px; left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: var(--accent); color: #fff; padding: 12px 24px;
-    border-radius: 50px; font-size: 0.9rem; font-family: -apple-system, sans-serif;
-    font-weight: 600; box-shadow: var(--shadow-lg);
-    transition: transform 0.4s cubic-bezier(.4,0,.2,1); z-index: 999;
-  }
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--accent); color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 0.9rem; font-family: -apple-system, sans-serif; font-weight: 600; box-shadow: var(--shadow-lg); transition: transform 0.4s cubic-bezier(.4,0,.2,1); z-index: 999; }
   .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ââ Print styles for PDF ââ */
+  @media print {
+    body::before, header, .warning-banner, .card:first-of-type, .journal-toolbar,
+    .select-mode-bar, .entry-actions, .entry-checkbox, .toast, .modal-overlay { display: none !important; }
+    body { background: #fff !important; color: #000 !important; }
+    main { padding: 0 !important; max-width: 100% !important; }
+    .card { box-shadow: none !important; border: none !important; padding: 0 !important; margin: 0 !important; }
+    h2 { font-size: 1.6rem; color: #1a5fa8 !important; margin-bottom: 16px; border-bottom: 2px solid #1a5fa8; padding-bottom: 8px; }
+    .entry-card { border: 1px solid #ccc !important; border-radius: 6px !important; padding: 16px !important; margin-bottom: 16px !important; page-break-inside: avoid; background: #fff !important; box-shadow: none !important; outline: none !important; }
+    .entry-ref { color: #1a5fa8 !important; }
+    .entry-comments { background: #f5f5f5 !important; }
+    .tag { background: #d4edda !important; color: #1a6e35 !important; }
+    .search-bar, .toolbar-right { display: none !important; }
+  }
+
   @media (max-width: 600px) {
     .form-grid { grid-template-columns: 1fr; }
     .form-group.full, .form-group.narrow { grid-column: 1; max-width: 100%; }
@@ -361,6 +274,17 @@
 </header>
 
 <main>
+
+  <!-- Storage Warning Banner -->
+  <div class="warning-banner" id="warningBanner">
+    <span class="w-icon">&#9888;</span>
+    <div class="w-text">
+      <strong>Important: Protect Your Journal</strong>
+      Your journal entries are saved privately in this browser's local storage. Do not clear your browser cache or site data, or all your entries will be permanently lost. For safekeeping, export your journal regularly using the PDF or Word export buttons.
+    </div>
+    <button class="dismiss-btn" id="dismissWarning" title="Dismiss">&#x2715;</button>
+  </div>
+
   <div class="card">
     <h2>New Entry</h2>
     <div class="form-grid">
@@ -395,10 +319,12 @@
     <h2>My Journal</h2>
     <div class="journal-toolbar">
       <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Search by keyword, tag, reference, or comments...">
+        <input type="text" id="searchInput" placeholder="Search entries...">
         <span class="entry-count" id="entryCount"></span>
       </div>
-      <div class="select-controls">
+      <div class="toolbar-right">
+        <button class="export-btn export-pdf" id="exportPdfBtn">Export PDF</button>
+        <button class="export-btn export-word" id="exportWordBtn">Export Word</button>
         <button class="sel-btn" id="toggleSelectBtn">Select Entries</button>
         <button class="sel-btn" id="selectAllBtn" style="display:none;">Select All</button>
         <button class="sel-btn danger" id="deleteSelectedBtn" style="display:none;" disabled>Delete Selected (0)</button>
@@ -406,17 +332,18 @@
       </div>
     </div>
     <div class="select-mode-bar" id="selectModeBar">
-      Selection mode is ON â€” tap entries to select them, then press Delete Selected.
+      Selection mode is ON â tap entries to select them, then press Delete Selected.
     </div>
     <div class="entries" id="entriesList"></div>
   </div>
+
 </main>
 
 <!-- Confirm Delete Modal -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h3>Delete Entries?</h3>
-    <p id="modalMsg">Are you sure you want to delete these entries? <strong>This cannot be undone.</strong></p>
+    <p id="modalMsg"></p>
     <div class="modal-btns">
       <button class="btn btn-secondary" id="modalCancelBtn">No, Keep Them</button>
       <button class="btn btn-danger" id="modalConfirmBtn">Yes, Delete</button>
@@ -430,48 +357,37 @@
 (function () {
   'use strict';
 
-  var STORE_KEY = 'sj_entries';
-  var THEME_KEY = 'sj_theme';
+  var STORE_KEY   = 'sj_entries';
+  var THEME_KEY   = 'sj_theme';
+  var DISMISS_KEY = 'sj_warning_dismissed';
 
   function esc(s) {
-    return String(s)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
-
   function fmtDate(d) {
     if (!d) return '';
     var p = d.split('-');
-    return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]))
-      .toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    return new Date(Number(p[0]), Number(p[1])-1, Number(p[2]))
+      .toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
   }
-
   function today() {
     var d = new Date();
-    return d.getFullYear() + '-' +
-      String(d.getMonth() + 1).padStart(2, '0') + '-' +
-      String(d.getDate()).padStart(2, '0');
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   }
-
   function loadEntries() {
-    try { var r = localStorage.getItem(STORE_KEY); return r ? JSON.parse(r) : []; }
-    catch (e) { return []; }
+    try { var r = localStorage.getItem(STORE_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; }
   }
-
   function saveEntries(arr) {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(arr)); }
-    catch (e) { showToast('Storage error.'); }
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(arr)); } catch(e) { showToast('Storage error.'); }
   }
 
-  // â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ââ State ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   var entries    = loadEntries();
   var editingId  = null;
   var selectMode = false;
-  var selected   = {};   // id -> true
+  var selected   = {};
 
-  // â”€â”€ DOM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ââ DOM ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   var fText     = document.getElementById('f-text');
   var fRef      = document.getElementById('f-ref');
   var fComments = document.getElementById('f-comments');
@@ -490,304 +406,304 @@
   var cancelSelectBtn   = document.getElementById('cancelSelectBtn');
   var selectModeBar     = document.getElementById('selectModeBar');
 
-  var modalOverlay  = document.getElementById('modalOverlay');
-  var modalMsg      = document.getElementById('modalMsg');
-  var modalConfirm  = document.getElementById('modalConfirmBtn');
-  var modalCancel   = document.getElementById('modalCancelBtn');
+  var modalOverlay = document.getElementById('modalOverlay');
+  var modalMsg     = document.getElementById('modalMsg');
+  var modalConfirm = document.getElementById('modalConfirmBtn');
+  var modalCancel  = document.getElementById('modalCancelBtn');
 
-  // â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  var warningBanner  = document.getElementById('warningBanner');
+  var dismissWarning = document.getElementById('dismissWarning');
+
+  // ââ Init âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   fDate.value = today();
   applyTheme(localStorage.getItem(THEME_KEY) || 'light');
+  if (localStorage.getItem(DISMISS_KEY)) warningBanner.style.display = 'none';
   renderEntries();
 
-  // â”€â”€ Theme â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  dismissWarning.addEventListener('click', function () {
+    warningBanner.style.display = 'none';
+    localStorage.setItem(DISMISS_KEY, '1');
+  });
+
+  // ââ Theme ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   themeBtn.addEventListener('click', function () {
     var cur = document.documentElement.getAttribute('data-theme') || 'light';
     applyTheme(cur === 'dark' ? 'light' : 'dark');
   });
-
   function applyTheme(t) {
     document.documentElement.setAttribute('data-theme', t);
     localStorage.setItem(THEME_KEY, t);
     themeBtn.textContent = t === 'dark' ? '[ Light Mode ]' : '[ Dark Mode ]';
   }
 
-  // â”€â”€ Save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ââ Save âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   saveBtn.addEventListener('click', function () {
     var text     = fText.value.trim();
     var ref      = fRef.value.trim();
     var comments = fComments.value.trim();
     var date     = fDate.value;
     var tagsRaw  = fTags.value.trim();
-    var tags     = tagsRaw ? tagsRaw.split(',').map(function (t) { return t.trim(); }).filter(Boolean) : [];
-
+    var tags     = tagsRaw ? tagsRaw.split(',').map(function(t){return t.trim();}).filter(Boolean) : [];
     if (!text) { showToast('Please enter scripture text.'); return; }
     if (!ref)  { showToast('Please add a source / reference.'); return; }
-
     if (editingId) {
       for (var i = 0; i < entries.length; i++) {
         if (entries[i].id === editingId) {
-          entries[i].text = text; entries[i].ref = ref;
-          entries[i].comments = comments; entries[i].date = date; entries[i].tags = tags;
-          break;
+          entries[i].text=text; entries[i].ref=ref; entries[i].comments=comments;
+          entries[i].date=date; entries[i].tags=tags; break;
         }
       }
-      editingId = null;
-      saveBtn.textContent = 'Save Entry';
-      showToast('Entry updated.');
+      editingId = null; saveBtn.textContent = 'Save Entry'; showToast('Entry updated.');
     } else {
-      entries.unshift({ id: String(Date.now()), text: text, ref: ref, comments: comments, date: date, tags: tags });
+      entries.unshift({ id: String(Date.now()), text:text, ref:ref, comments:comments, date:date, tags:tags });
       showToast('Entry saved.');
     }
-    saveEntries(entries);
-    clearForm();
-    renderEntries();
+    saveEntries(entries); clearForm(); renderEntries();
   });
 
   clearBtn.addEventListener('click', function () {
-    editingId = null;
-    saveBtn.textContent = 'Save Entry';
-    clearForm();
+    editingId = null; saveBtn.textContent = 'Save Entry'; clearForm();
   });
-
   function clearForm() {
-    fText.value = ''; fRef.value = ''; fComments.value = '';
-    fDate.value = today(); fTags.value = '';
+    fText.value=''; fRef.value=''; fComments.value=''; fDate.value=today(); fTags.value='';
   }
 
-  // â”€â”€ Select mode controls â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  toggleSelectBtn.addEventListener('click', function () {
-    enterSelectMode();
+  // ââ Export PDF âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  document.getElementById('exportPdfBtn').addEventListener('click', function () {
+    if (entries.length === 0) { showToast('No entries to export.'); return; }
+    window.print();
   });
 
-  cancelSelectBtn.addEventListener('click', function () {
-    exitSelectMode();
+  // ââ Export Word (.docx) ââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  document.getElementById('exportWordBtn').addEventListener('click', function () {
+    if (entries.length === 0) { showToast('No entries to export.'); return; }
+    if (typeof docx === 'undefined') { showToast('Word export library not loaded. Check your connection.'); return; }
+
+    var children = [];
+
+    // Title
+    children.push(new docx.Paragraph({
+      text: 'My Scripture Journal',
+      heading: docx.HeadingLevel.HEADING_1,
+      spacing: { after: 300 }
+    }));
+    children.push(new docx.Paragraph({
+      text: 'Exported on ' + new Date().toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' }),
+      spacing: { after: 400 },
+      run: { color: '888888', size: 20 }
+    }));
+
+    for (var i = 0; i < entries.length; i++) {
+      var e = entries[i];
+
+      // Reference + Date
+      children.push(new docx.Paragraph({
+        children: [
+          new docx.TextRun({ text: e.ref, bold: true, size: 26, color: '1a5fa8' }),
+          new docx.TextRun({ text: '   ' + fmtDate(e.date), size: 20, color: '888888' })
+        ],
+        spacing: { before: 300, after: 100 }
+      }));
+
+      // Scripture text
+      children.push(new docx.Paragraph({
+        children: [ new docx.TextRun({ text: e.text, italics: true, size: 22 }) ],
+        border: { left: { style: docx.BorderStyle.SINGLE, size: 6, color: 'c2d8f0', space: 10 } },
+        indent: { left: 300 },
+        spacing: { after: 120 }
+      }));
+
+      // Comments
+      if (e.comments) {
+        children.push(new docx.Paragraph({
+          children: [ new docx.TextRun({ text: 'My Notes', bold: true, size: 18, color: '1a5fa8', allCaps: true }) ],
+          spacing: { before: 80, after: 60 }
+        }));
+        children.push(new docx.Paragraph({
+          children: [ new docx.TextRun({ text: e.comments, size: 22 }) ],
+          spacing: { after: 100 },
+          shading: { type: docx.ShadingType.CLEAR, fill: 'ddeeff' }
+        }));
+      }
+
+      // Tags
+      if (e.tags && e.tags.length) {
+        children.push(new docx.Paragraph({
+          children: [
+            new docx.TextRun({ text: 'Tags: ', bold: true, size: 18, color: '444444' }),
+            new docx.TextRun({ text: e.tags.join(', '), size: 18, color: '1a6e35' })
+          ],
+          spacing: { after: 80 }
+        }));
+      }
+
+      // Divider
+      children.push(new docx.Paragraph({
+        border: { bottom: { style: docx.BorderStyle.SINGLE, size: 1, color: 'dddddd', space: 6 } },
+        spacing: { after: 200 }
+      }));
+    }
+
+    var doc = new docx.Document({
+      sections: [{ properties: {}, children: children }]
+    });
+
+    docx.Packer.toBlob(doc).then(function (blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'Scripture_Journal.docx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Word document downloaded.');
+    });
   });
+
+  // ââ Select mode ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  toggleSelectBtn.addEventListener('click', enterSelectMode);
+  cancelSelectBtn.addEventListener('click', exitSelectMode);
 
   selectAllBtn.addEventListener('click', function () {
-    var q = searchEl.value.toLowerCase();
-    var filtered = getFiltered(q);
-    var allSelected = filtered.every(function (e) { return selected[e.id]; });
+    var filtered = getFiltered(searchEl.value.toLowerCase());
+    var allSel = filtered.every(function(e){ return selected[e.id]; });
     selected = {};
-    if (!allSelected) {
-      filtered.forEach(function (e) { selected[e.id] = true; });
-    }
-    renderEntries();
-    updateDeleteBtn();
+    if (!allSel) filtered.forEach(function(e){ selected[e.id]=true; });
+    renderEntries(); updateDeleteBtn();
   });
 
   deleteSelectedBtn.addEventListener('click', function () {
     var count = Object.keys(selected).length;
-    if (count === 0) return;
+    if (!count) return;
     modalMsg.innerHTML = 'You are about to permanently delete <strong>' + count +
-      ' entr' + (count === 1 ? 'y' : 'ies') + '</strong>. This cannot be undone.';
+      ' entr' + (count===1?'y':'ies') + '</strong>. This cannot be undone.';
     modalOverlay.classList.add('open');
   });
 
-  modalCancel.addEventListener('click', function () {
-    modalOverlay.classList.remove('open');
-  });
-
-  modalConfirm.addEventListener('click', function () {
-    var count = Object.keys(selected).length;
-    entries = entries.filter(function (e) { return !selected[e.id]; });
-    saveEntries(entries);
-    selected = {};
-    modalOverlay.classList.remove('open');
-    exitSelectMode();
-    showToast(count + ' entr' + (count === 1 ? 'y' : 'ies') + ' deleted.');
-    renderEntries();
-  });
-
-  // Click outside modal to cancel
-  modalOverlay.addEventListener('click', function (e) {
-    if (e.target === modalOverlay) modalOverlay.classList.remove('open');
-  });
-
   function enterSelectMode() {
-    selectMode = true;
-    selected = {};
-    toggleSelectBtn.style.display = 'none';
-    selectAllBtn.style.display = '';
-    deleteSelectedBtn.style.display = '';
-    cancelSelectBtn.style.display = '';
+    selectMode=true; selected={};
+    toggleSelectBtn.style.display='none';
+    selectAllBtn.style.display='';
+    deleteSelectedBtn.style.display='';
+    cancelSelectBtn.style.display='';
     selectModeBar.classList.add('active');
     listEl.classList.add('select-mode');
-    updateDeleteBtn();
-    renderEntries();
+    updateDeleteBtn(); renderEntries();
   }
-
   function exitSelectMode() {
-    selectMode = false;
-    selected = {};
-    toggleSelectBtn.style.display = '';
-    selectAllBtn.style.display = 'none';
-    deleteSelectedBtn.style.display = 'none';
-    cancelSelectBtn.style.display = 'none';
+    selectMode=false; selected={};
+    toggleSelectBtn.style.display='';
+    selectAllBtn.style.display='none';
+    deleteSelectedBtn.style.display='none';
+    cancelSelectBtn.style.display='none';
     selectModeBar.classList.remove('active');
     listEl.classList.remove('select-mode');
     renderEntries();
   }
-
   function updateDeleteBtn() {
-    var count = Object.keys(selected).length;
-    deleteSelectedBtn.textContent = 'Delete Selected (' + count + ')';
-    deleteSelectedBtn.disabled = count === 0;
+    var c = Object.keys(selected).length;
+    deleteSelectedBtn.textContent = 'Delete Selected (' + c + ')';
+    deleteSelectedBtn.disabled = c === 0;
   }
 
-  // â”€â”€ Entry card clicks (edit, delete single, select) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ââ Card clicks ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   listEl.addEventListener('click', function (e) {
     if (selectMode) {
       var card = e.target.closest('.entry-card');
       if (!card) return;
       var id = card.getAttribute('data-id');
       var cb = card.querySelector('.entry-checkbox');
-      if (selected[id]) {
-        delete selected[id];
-        card.classList.remove('selected');
-        if (cb) cb.checked = false;
-      } else {
-        selected[id] = true;
-        card.classList.add('selected');
-        if (cb) cb.checked = true;
-      }
-      updateDeleteBtn();
-      return;
+      if (selected[id]) { delete selected[id]; card.classList.remove('selected'); if(cb) cb.checked=false; }
+      else { selected[id]=true; card.classList.add('selected'); if(cb) cb.checked=true; }
+      updateDeleteBtn(); return;
     }
-
     var editBtn = e.target.closest('.edit-btn');
     var delBtn  = e.target.closest('.del-btn');
-
     if (editBtn) {
-      var eid = editBtn.getAttribute('data-id');
-      var entry = null;
-      for (var i = 0; i < entries.length; i++) {
-        if (entries[i].id === eid) { entry = entries[i]; break; }
-      }
+      var eid = editBtn.getAttribute('data-id'), entry=null;
+      for (var i=0;i<entries.length;i++) { if(entries[i].id===eid){entry=entries[i];break;} }
       if (!entry) return;
-      fText.value = entry.text; fRef.value = entry.ref;
-      fComments.value = entry.comments || ''; fDate.value = entry.date;
-      fTags.value = entry.tags.join(', ');
-      editingId = eid;
-      saveBtn.textContent = 'Update Entry';
-      document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+      fText.value=entry.text; fRef.value=entry.ref; fComments.value=entry.comments||'';
+      fDate.value=entry.date; fTags.value=entry.tags.join(', ');
+      editingId=eid; saveBtn.textContent='Update Entry';
+      document.querySelector('.card').scrollIntoView({behavior:'smooth'});
     }
-
     if (delBtn) {
-      var did = delBtn.getAttribute('data-id');
-      var dentry = null;
-      for (var j = 0; j < entries.length; j++) {
-        if (entries[j].id === did) { dentry = entries[j]; break; }
-      }
-      modalMsg.innerHTML = 'You are about to delete <strong>"' + esc(dentry ? dentry.ref : 'this entry') +
-        '"</strong>. This cannot be undone.';
-      modalOverlay.classList.add('open');
+      var did = delBtn.getAttribute('data-id'), dentry=null;
+      for (var j=0;j<entries.length;j++) { if(entries[j].id===did){dentry=entries[j];break;} }
+      modalMsg.innerHTML = 'You are about to delete <strong>"' + esc(dentry?dentry.ref:'this entry') + '"</strong>. This cannot be undone.';
       modalConfirm.setAttribute('data-single', did);
+      modalOverlay.classList.add('open');
     }
   });
 
-  // Handle single-entry delete confirmation separately
-  modalConfirm.addEventListener('click', function () {
-    // Already handled above for bulk; for single we check data-single
-  }, false);
-
-  // Override modal confirm to handle both single and bulk
+  modalOverlay.addEventListener('click', function(e){ if(e.target===modalOverlay){ modalConfirm.removeAttribute('data-single'); modalOverlay.classList.remove('open'); } });
+  modalCancel.onclick = function(){ modalConfirm.removeAttribute('data-single'); modalOverlay.classList.remove('open'); };
   modalConfirm.onclick = function () {
     var singleId = modalConfirm.getAttribute('data-single');
     if (singleId) {
-      entries = entries.filter(function (e) { return e.id !== singleId; });
-      saveEntries(entries);
-      modalConfirm.removeAttribute('data-single');
-      modalOverlay.classList.remove('open');
-      showToast('Entry deleted.');
-      renderEntries();
+      entries = entries.filter(function(e){return e.id!==singleId;});
+      saveEntries(entries); modalConfirm.removeAttribute('data-single');
+      modalOverlay.classList.remove('open'); showToast('Entry deleted.'); renderEntries();
     } else {
       var count = Object.keys(selected).length;
-      entries = entries.filter(function (e) { return !selected[e.id]; });
-      saveEntries(entries);
-      selected = {};
-      modalOverlay.classList.remove('open');
-      exitSelectMode();
-      showToast(count + ' entr' + (count === 1 ? 'y' : 'ies') + ' deleted.');
-      renderEntries();
+      entries = entries.filter(function(e){return !selected[e.id];});
+      saveEntries(entries); selected={};
+      modalOverlay.classList.remove('open'); exitSelectMode();
+      showToast(count+' entr'+(count===1?'y':'ies')+' deleted.'); renderEntries();
     }
   };
 
-  modalCancel.onclick = function () {
-    modalConfirm.removeAttribute('data-single');
-    modalOverlay.classList.remove('open');
-  };
-
-  // â”€â”€ Search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ââ Search + Render ââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
   searchEl.addEventListener('input', renderEntries);
 
   function getFiltered(q) {
-    return entries.filter(function (e) {
-      if (!q) return true;
-      return (
-        e.text.toLowerCase().indexOf(q) !== -1 ||
-        e.ref.toLowerCase().indexOf(q) !== -1 ||
-        (e.comments || '').toLowerCase().indexOf(q) !== -1 ||
-        e.tags.some(function (t) { return t.toLowerCase().indexOf(q) !== -1; })
-      );
+    return entries.filter(function(e){
+      if(!q) return true;
+      return e.text.toLowerCase().indexOf(q)!==-1 || e.ref.toLowerCase().indexOf(q)!==-1 ||
+        (e.comments||'').toLowerCase().indexOf(q)!==-1 ||
+        e.tags.some(function(t){return t.toLowerCase().indexOf(q)!==-1;});
     });
   }
 
-  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function renderEntries() {
     var q = searchEl.value.toLowerCase();
     var filtered = getFiltered(q);
-
-    countEl.textContent = filtered.length === entries.length
-      ? entries.length + ' entr' + (entries.length === 1 ? 'y' : 'ies')
-      : filtered.length + ' of ' + entries.length;
-
-    if (filtered.length === 0) {
-      listEl.innerHTML =
-        '<div class="empty">' +
-        '<svg viewBox="0 0 48 48" fill="none"><rect x="6" y="4" width="36" height="40" rx="4" stroke="currentColor" stroke-width="2"/>' +
-        '<path d="M14 16h20M14 22h20M14 28h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' +
-        '<p>' + (entries.length === 0 ? 'Your journal is empty. Add your first entry above.' : 'No entries match your search.') + '</p>' +
-        '</div>';
+    countEl.textContent = filtered.length===entries.length
+      ? entries.length+' entr'+(entries.length===1?'y':'ies')
+      : filtered.length+' of '+entries.length;
+    if (filtered.length===0) {
+      listEl.innerHTML='<div class="empty"><svg viewBox="0 0 48 48" fill="none"><rect x="6" y="4" width="36" height="40" rx="4" stroke="currentColor" stroke-width="2"/><path d="M14 16h20M14 22h20M14 28h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><p>'+(entries.length===0?'Your journal is empty. Add your first entry above.':'No entries match your search.')+'</p></div>';
       return;
     }
-
-    var html = '';
-    for (var i = 0; i < filtered.length; i++) {
-      var e = filtered[i];
-      var isSelected = !!selected[e.id];
-      var tagsHtml = '';
-      for (var j = 0; j < e.tags.length; j++) {
-        tagsHtml += '<span class="tag">' + esc(e.tags[j]) + '</span>';
-      }
-      html +=
-        '<div class="entry-card' + (isSelected ? ' selected' : '') + '" data-id="' + esc(e.id) + '">' +
-          '<input type="checkbox" class="entry-checkbox"' + (isSelected ? ' checked' : '') + ' tabindex="-1">' +
-          '<div class="entry-actions">' +
-            '<button class="icon-btn edit-btn" data-id="' + esc(e.id) + '" title="Edit">&#9998;</button>' +
-            '<button class="icon-btn del del-btn" data-id="' + esc(e.id) + '" title="Delete">&#x2715;</button>' +
-          '</div>' +
-          '<div class="entry-header">' +
-            '<span class="entry-ref">' + esc(e.ref) + '</span>' +
-            '<span class="entry-date">' + fmtDate(e.date) + '</span>' +
-          '</div>' +
-          '<div class="entry-text">' + esc(e.text) + '</div>' +
-          (e.comments ? '<div class="entry-comments"><span class="comments-label">My Notes</span>' + esc(e.comments) + '</div>' : '') +
-          (e.tags.length ? '<div class="tags">' + tagsHtml + '</div>' : '') +
+    var html='';
+    for (var i=0;i<filtered.length;i++) {
+      var e=filtered[i], isSel=!!selected[e.id], tagsHtml='';
+      for (var j=0;j<e.tags.length;j++) tagsHtml+='<span class="tag">'+esc(e.tags[j])+'</span>';
+      html+=
+        '<div class="entry-card'+(isSel?' selected':'')+'" data-id="'+esc(e.id)+'">' +
+        '<input type="checkbox" class="entry-checkbox"'+(isSel?' checked':'')+' tabindex="-1">' +
+        '<div class="entry-actions">' +
+          '<button class="icon-btn edit-btn" data-id="'+esc(e.id)+'" title="Edit">&#9998;</button>' +
+          '<button class="icon-btn del del-btn" data-id="'+esc(e.id)+'" title="Delete">&#x2715;</button>' +
+        '</div>' +
+        '<div class="entry-header"><span class="entry-ref">'+esc(e.ref)+'</span><span class="entry-date">'+fmtDate(e.date)+'</span></div>' +
+        '<div class="entry-text">'+esc(e.text)+'</div>' +
+        (e.comments?'<div class="entry-comments"><span class="comments-label">My Notes</span>'+esc(e.comments)+'</div>':'') +
+        (e.tags.length?'<div class="tags">'+tagsHtml+'</div>':'') +
         '</div>';
     }
-    listEl.innerHTML = html;
-    if (selectMode) listEl.classList.add('select-mode');
+    listEl.innerHTML=html;
+    if(selectMode) listEl.classList.add('select-mode');
   }
 
-  // â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  var toastEl = document.getElementById('toast');
-  var toastTimer;
+  // ââ Toast ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  var toastEl=document.getElementById('toast'), toastTimer;
   function showToast(msg) {
-    toastEl.textContent = msg;
-    toastEl.classList.add('show');
+    toastEl.textContent=msg; toastEl.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2500);
+    toastTimer=setTimeout(function(){toastEl.classList.remove('show');},2500);
   }
 
 }());
